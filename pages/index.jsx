@@ -1,10 +1,6 @@
 // pages/index.jsx
-// Future Face — AI Skin Analysis
-// Screens: Upload → Age → Analyzing → Results
-
 import { useState, useRef } from "react";
 
-// ── Brand tokens ──────────────────────────────────────────────────────────────
 const C = {
   burgundy: "#772135",
   dark:     "#5a1828",
@@ -27,15 +23,13 @@ const STEPS = [
   "Generating 5-year skin projection",
 ];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function scoreColor(s) {
   return s >= 70 ? C.green : s >= 45 ? C.amber : C.red;
 }
 
 function CircularScore({ score, size = 120, color, label, sub }) {
-  const r    = 40;
-  const circ = 2 * Math.PI * r;
-  const col  = color || scoreColor(score);
+  const r = 40, circ = 2 * Math.PI * r;
+  const col = color || scoreColor(score);
   return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
       <svg width={size} height={size} viewBox="0 0 100 100">
@@ -51,19 +45,17 @@ function CircularScore({ score, size = 120, color, label, sub }) {
       </svg>
       {label && <div style={{ fontFamily:"Montserrat", fontSize:11, fontWeight:700, color:C.text,
         textAlign:"center", letterSpacing:".05em", textTransform:"uppercase" }}>{label}</div>}
-      {sub   && <div style={{ fontFamily:"Montserrat", fontSize:10, color:C.muted, textAlign:"center" }}>{sub}</div>}
+      {sub && <div style={{ fontFamily:"Montserrat", fontSize:10, color:C.muted, textAlign:"center" }}>{sub}</div>}
     </div>
   );
 }
 
 function Badge({ level }) {
   const map = {
-    Low:        [C.green+"18", C.green],  Moderate:    ["#FFF8E1",      C.amber],
-    High:       ["#FFEBEE",    C.red],    Excellent:   ["#EDF6FF",      "#1565C0"],
-    Good:       [C.green+"18", C.green],  Dehydrated:  ["#FFEBEE",      C.red],
-    Normal:     [C.green+"18", C.green],  Sensitive:   ["#FFEBEE",      C.red],
-    Oily:       ["#FFF8E1",    C.amber],  Dry:         ["#FFEBEE",      C.red],
-    Combination:["#FFF8E1",    C.amber],
+    Low:[C.green+"18",C.green], Moderate:["#FFF8E1",C.amber], High:["#FFEBEE",C.red],
+    Excellent:["#EDF6FF","#1565C0"], Good:[C.green+"18",C.green], Dehydrated:["#FFEBEE",C.red],
+    Normal:[C.green+"18",C.green], Sensitive:["#FFEBEE",C.red], Oily:["#FFF8E1",C.amber],
+    Dry:["#FFEBEE",C.red], Combination:["#FFF8E1",C.amber],
   };
   const [bg, fg] = map[level] || ["#F5F5F5","#555"];
   return (
@@ -92,9 +84,8 @@ function UploadScreen({ onFile, fileRef }) {
         Upload a clear, well-lit selfie. Our AI analyzes 6 key skin markers, compares your skin
         age to your real age, and simulates your skin 5 years into the future.
       </p>
-
       <div
-        onDragOver={e  => { e.preventDefault(); setDrag(true); }}
+        onDragOver={e => { e.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
         onDrop={e => { e.preventDefault(); setDrag(false); onFile(e.dataTransfer.files[0]); }}
         onClick={() => fileRef.current?.click()}
@@ -102,34 +93,33 @@ function UploadScreen({ onFile, fileRef }) {
           padding:"56px 40px", cursor:"pointer",
           background: drag ? "rgba(119,33,53,.04)" : C.warm,
           transition:"all .2s ease", maxWidth:440, margin:"0 auto 40px" }}>
-        <div style={{ fontSize:52, marginBottom:18 }}>📸</div>
+        <div style={{ fontSize:52, marginBottom:18 }}></div>
         <div style={{ fontFamily:"Playfair Display", fontSize:20, color:C.text, marginBottom:8 }}>
           Upload Your Selfie
         </div>
         <div style={{ color:C.muted, fontSize:13 }}>Drag &amp; drop or click to browse</div>
         <div style={{ color:C.muted, fontSize:11, marginTop:6 }}>JPG · PNG · WEBP · HEIC</div>
       </div>
-      <input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display:"none" }}
-        onChange={e => onFile(e.target.files[0])} />
-
+      <input ref={fileRef} type="file" accept="image/*" capture="user"
+        style={{ display:"none" }} onChange={e => onFile(e.target.files[0])} />
       <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"10px 24px", marginBottom:36 }}>
         {["Acne Cause Detection","Wrinkle Risk","Pigmentation Score",
           "Hydration Score","Skin Age Comparison","5-Year Simulation"].map(f => (
-          <div key={f} style={{ display:"flex", alignItems:"center", gap:6, color:C.muted,
-            fontSize:12, fontFamily:"Montserrat" }}>
+          <div key={f} style={{ display:"flex", alignItems:"center", gap:6,
+            color:C.muted, fontSize:12, fontFamily:"Montserrat" }}>
             <span style={{ color:C.burgundy, fontSize:10 }}>✦</span> {f}
           </div>
         ))}
       </div>
       <div style={{ fontFamily:"Montserrat", fontSize:10, color:C.muted }}>
-        🔒 Your photo is analyzed privately and never stored.
+         Your photo is analyzed privately and never stored.
       </div>
     </div>
   );
 }
 
 // ── Age Screen ────────────────────────────────────────────────────────────────
-function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) {
+function AgeScreen({ imgSrc, age, setAge, error, onBack, onAnalyze }) {
   return (
     <div style={{ maxWidth:460, margin:"0 auto", textAlign:"center", animation:"fadeUp .5s ease both" }}>
       <div style={{ width:110, height:110, borderRadius:"50%", overflow:"hidden",
@@ -138,9 +128,7 @@ function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) 
         <img src={imgSrc} alt="selfie" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
       </div>
       <div style={{ fontFamily:"Montserrat", fontSize:11, fontWeight:700, color:C.burgundy,
-        letterSpacing:".15em", textTransform:"uppercase", marginBottom:10 }}>
-        Almost There
-      </div>
+        letterSpacing:".15em", textTransform:"uppercase", marginBottom:10 }}>Almost There</div>
       <h2 style={{ fontFamily:"Playfair Display", fontSize:30, color:C.text, marginBottom:10 }}>
         How old are you?
       </h2>
@@ -159,11 +147,10 @@ function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) 
           outline:"none", textAlign:"center", marginBottom:10,
           boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}
       />
-      {error    && <div style={{ color:C.red, fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{error}</div>}
-      {apiError && <div style={{ color:C.red, fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{apiError}</div>}
+      {error && <div style={{ color:C.red, fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{error}</div>}
       <button onClick={onAnalyze} className="ff-btn"
         style={{ width:"100%", padding:"17px", borderRadius:14, border:"none",
-          background:`linear-gradient(135deg, ${C.burgundy}, ${C.dark})`, color:"#fff",
+          background:`linear-gradient(135deg,${C.burgundy},${C.dark})`, color:"#fff",
           fontSize:13, fontWeight:700, fontFamily:"Montserrat", letterSpacing:".1em",
           textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)", marginBottom:14 }}>
         Analyze My Skin →
@@ -186,7 +173,7 @@ function AnalyzingScreen({ imgSrc, progress, stepIdx }) {
         <img src={imgSrc} alt="scanning" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
         <div style={{ position:"absolute", inset:0, background:"rgba(119,33,53,.12)" }}/>
         <div style={{ position:"absolute", left:0, right:0, height:3,
-          background:`linear-gradient(transparent, ${C.gold}, ${C.burgundy}, ${C.gold}, transparent)`,
+          background:`linear-gradient(transparent,${C.gold},${C.burgundy},${C.gold},transparent)`,
           animation:"scanline 2.2s linear infinite", filter:"blur(1px)" }}/>
         {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(([v,h]) => (
           <div key={`${v}${h}`} style={{ position:"absolute", [v]:14, [h]:14, width:22, height:22,
@@ -208,7 +195,7 @@ function AnalyzingScreen({ imgSrc, progress, stepIdx }) {
         {STEPS[stepIdx]}
       </p>
       <div style={{ background:C.border, borderRadius:20, height:5, marginBottom:28, overflow:"hidden" }}>
-        <div style={{ height:"100%", background:`linear-gradient(90deg, ${C.burgundy}, ${C.gold})`,
+        <div style={{ height:"100%", background:`linear-gradient(90deg,${C.burgundy},${C.gold})`,
           borderRadius:20, width:`${progress}%`, transition:"width .9s ease" }}/>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:10, textAlign:"left" }}>
@@ -244,24 +231,22 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
   const diffCol = diff > 3 ? C.red : diff < -3 ? C.green : C.amber;
 
   const metrics = [
-    { key:"acne",         label:"Acne Health",    icon:"🔬", data:analysis.acne,         badge:analysis.acne?.riskLevel },
-    { key:"wrinkle",      label:"Wrinkle Health",  icon:"✨", data:analysis.wrinkle,      badge:analysis.wrinkle?.riskLevel },
-    { key:"pigmentation", label:"Even Tone",       icon:"🎨", data:analysis.pigmentation, badge:analysis.pigmentation?.riskLevel },
-    { key:"hydration",    label:"Hydration",       icon:"💧", data:analysis.hydration,    badge:analysis.hydration?.level },
+    { key:"acne",         label:"Acne Health",    icon:"", data:analysis.acne,         badge:analysis.acne?.riskLevel },
+    { key:"wrinkle",      label:"Wrinkle Health",  icon:"", data:analysis.wrinkle,      badge:analysis.wrinkle?.riskLevel },
+    { key:"pigmentation", label:"Even Tone",       icon:"", data:analysis.pigmentation, badge:analysis.pigmentation?.riskLevel },
+    { key:"hydration",    label:"Hydration",       icon:"", data:analysis.hydration,    badge:analysis.hydration?.level },
   ];
 
   const simNodes = [
-    { year:"Now",     icon:"👤", text:"Your current skin condition as analyzed.",  label:"",             highlight:false },
-    { year:"1 Year",  icon:"📅", text:analysis.futureSimulation?.year1,            label:"Without care", highlight:false },
-    { year:"3 Years", icon:"⏳", text:analysis.futureSimulation?.year3,            label:"Without care", highlight:false },
-    { year:"5 Years", icon:"⚠️", text:analysis.futureSimulation?.year5,            label:"Without care", highlight:false },
-    { year:"5 Years", icon:"🌿", text:analysis.futureSimulation?.withCare,         label:"With Future Face", highlight:true },
+    { year:"Now",     icon:"", text:"Your current skin condition as analyzed.",  label:"",             highlight:false },
+    { year:"1 Year",  icon:"", text:analysis.futureSimulation?.year1,            label:"Without care", highlight:false },
+    { year:"3 Years", icon:"", text:analysis.futureSimulation?.year3,            label:"Without care", highlight:false },
+    { year:"5 Years", icon:"", text:analysis.futureSimulation?.year5,            label:"Without care", highlight:false },
+    { year:"5 Years", icon:"", text:analysis.futureSimulation?.withCare,         label:"With Future Face", highlight:true },
   ];
 
   return (
     <div style={{ animation:"fadeUp .6s ease both" }}>
-
-      {/* Hero row */}
       <div style={{ display:"grid", gridTemplateColumns:"auto 1fr auto", gap:28,
         alignItems:"start", marginBottom:32 }}>
         <div style={{ position:"relative", width:150, height:190, borderRadius:18,
@@ -271,12 +256,9 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
             background:"linear-gradient(transparent,rgba(44,24,16,.75))", padding:"24px 12px 12px" }}>
             <div style={{ color:"rgba(255,255,255,.7)", fontFamily:"Montserrat", fontSize:9,
               fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Skin Type</div>
-            <div style={{ color:"#fff", fontFamily:"Playfair Display", fontSize:15 }}>
-              {analysis.skinType}
-            </div>
+            <div style={{ color:"#fff", fontFamily:"Playfair Display", fontSize:15 }}>{analysis.skinType}</div>
           </div>
         </div>
-
         <div>
           <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
             letterSpacing:".16em", textTransform:"uppercase", marginBottom:6 }}>Your Skin Report</div>
@@ -300,7 +282,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
               <div style={{ flex:1 }}>
                 <div style={{ height:4, background:C.border, borderRadius:4, position:"relative", margin:"0 0 8px" }}>
                   <div style={{ position:"absolute", left:"50%", top:-2, height:8, borderRadius:4,
-                    background:diffCol, width:`${Math.min(Math.abs(diff)*4, 50)}%`,
+                    background:diffCol, width:`${Math.min(Math.abs(diff)*4,50)}%`,
                     transform: diff < 0 ? "translateX(-100%)" : "none", transition:"width 1s ease" }}/>
                 </div>
                 <div style={{ fontFamily:"Montserrat", fontSize:11, fontWeight:700,
@@ -314,7 +296,6 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
             </div>
           </div>
         </div>
-
         <div className="ff-hover" style={{ background:C.warm, borderRadius:18, padding:"22px 18px",
           border:`1px solid ${C.border}`, boxShadow:"0 2px 12px rgba(0,0,0,.04)",
           textAlign:"center", flexShrink:0 }}>
@@ -323,7 +304,6 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
         </div>
       </div>
 
-      {/* 4 Metric cards */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",
         gap:16, marginBottom:28 }}>
         {metrics.map(({ key, label, icon, data, badge }) => (
@@ -336,17 +316,13 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
             <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
               <CircularScore score={data?.score ?? 0} size={100}/>
             </div>
-            <div style={{ fontFamily:"Montserrat", fontSize:12, fontWeight:700,
-              color:C.text, marginBottom:6 }}>{label}</div>
-            <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6 }}>
-              {data?.description}
-            </p>
+            <div style={{ fontFamily:"Montserrat", fontSize:12, fontWeight:700, color:C.text, marginBottom:6 }}>{label}</div>
+            <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6 }}>{data?.description}</p>
             {key === "acne" && data?.causes?.length > 0 && (
               <div style={{ marginTop:10, display:"flex", flexWrap:"wrap", gap:5 }}>
                 {data.causes.map((c, i) => (
                   <span key={i} style={{ background:"rgba(119,33,53,.07)", color:C.burgundy,
-                    borderRadius:10, padding:"2px 9px", fontSize:10, fontFamily:"Montserrat",
-                    fontWeight:500 }}>{c}</span>
+                    borderRadius:10, padding:"2px 9px", fontSize:10, fontFamily:"Montserrat", fontWeight:500 }}>{c}</span>
                 ))}
               </div>
             )}
@@ -354,7 +330,6 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
         ))}
       </div>
 
-      {/* 5-Year simulation */}
       <div style={{ background:C.warm, borderRadius:20, padding:28, border:`1px solid ${C.border}`,
         marginBottom:28, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
         <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
@@ -365,9 +340,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:12 }}>
           {simNodes.map((node, i) => (
             <div key={i} style={{ borderRadius:16, padding:18, position:"relative",
-              background: node.highlight
-                ? "linear-gradient(145deg, rgba(119,33,53,.06), rgba(201,169,110,.1))"
-                : "rgba(0,0,0,.025)",
+              background: node.highlight ? "linear-gradient(145deg,rgba(119,33,53,.06),rgba(201,169,110,.1))" : "rgba(0,0,0,.025)",
               border:`1.5px solid ${node.highlight ? C.burgundy : C.border}` }}>
               {node.highlight && (
                 <div style={{ position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)",
@@ -382,16 +355,13 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
                 <div style={{ fontFamily:"Montserrat", fontSize:9, color:C.muted, fontWeight:700,
                   textTransform:"uppercase", letterSpacing:".07em", marginBottom:8 }}>{node.label}</div>
               )}
-              <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6 }}>
-                {node.text}
-              </p>
+              <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6 }}>{node.text}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Recommendations */}
-      <div style={{ background:`linear-gradient(140deg, ${C.burgundy} 0%, ${C.dark} 100%)`,
+      <div style={{ background:`linear-gradient(140deg,${C.burgundy} 0%,${C.dark} 100%)`,
         borderRadius:20, padding:28, marginBottom:28, color:"#fff" }}>
         <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, letterSpacing:".16em",
           textTransform:"uppercase", opacity:.65, marginBottom:6 }}>Personalized for You</div>
@@ -401,31 +371,26 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
           {analysis.recommendations?.map((rec, i) => (
             <div key={i} style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
-              <div style={{ width:30, height:30, borderRadius:"50%",
-                background:"rgba(255,255,255,.15)", flexShrink:0,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                fontFamily:"Playfair Display", fontSize:14, fontWeight:700, color:"#fff" }}>{i + 1}</div>
-              <p style={{ fontFamily:"Montserrat", fontSize:13, lineHeight:1.7,
-                opacity:.9, paddingTop:5 }}>{rec}</p>
+              <div style={{ width:30, height:30, borderRadius:"50%", background:"rgba(255,255,255,.15)",
+                flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center",
+                fontFamily:"Playfair Display", fontSize:14, fontWeight:700, color:"#fff" }}>{i+1}</div>
+              <p style={{ fontFamily:"Montserrat", fontSize:13, lineHeight:1.7, opacity:.9, paddingTop:5 }}>{rec}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Disclaimer */}
       <div style={{ background:"rgba(119,33,53,.04)", borderRadius:14, padding:"14px 18px",
         marginBottom:28, border:"1px solid rgba(119,33,53,.12)" }}>
         <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6, textAlign:"center" }}>
           ⚕️ <strong>Disclaimer:</strong> This analysis is for informational purposes only and is
-          not a medical diagnosis. For clinical skin concerns, please consult a licensed dermatologist.
+          not a medical diagnosis. Please consult a licensed dermatologist for clinical concerns.
         </p>
       </div>
 
-      {/* CTAs */}
       <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-        <a href="https://futureface.ca/shop/" target="_blank" rel="noopener noreferrer"
-          className="ff-btn"
-          style={{ background:`linear-gradient(135deg, ${C.burgundy}, ${C.dark})`, color:"#fff",
+        <a href="https://futureface.ca/shop/" target="_blank" rel="noopener noreferrer" className="ff-btn"
+          style={{ background:`linear-gradient(135deg,${C.burgundy},${C.dark})`, color:"#fff",
             padding:"15px 32px", borderRadius:14, fontFamily:"Montserrat", fontSize:13,
             fontWeight:700, textDecoration:"none", letterSpacing:".08em",
             textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)" }}>
@@ -445,50 +410,51 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
 export default function FutureFaceSkinAnalysis() {
   const [phase,    setPhase]    = useState("upload");
   const [imgSrc,   setImgSrc]   = useState(null);
-  const [imgB64,   setImgB64]   = useState(null);
-  const [imgType,  setImgType]  = useState("image/jpeg");
+  const [fileObj,  setFileObj]  = useState(null);
   const [age,      setAge]      = useState("");
   const [ageError, setAgeError] = useState("");
-  const [apiError, setApiError] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [progress, setProgress] = useState(0);
   const [stepIdx,  setStepIdx]  = useState(0);
   const fileRef = useRef(null);
 
-  // ── Compress image before sending (fixes mobile 413 error) ──────────────────
- const loadFile = (file) => {
-  if (!file?.type.startsWith("image/")) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const MAX = 400;
-      let w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
-        else        { w = Math.round((w * MAX) / h); h = MAX; }
-      }
-      canvas.width  = w;
-      canvas.height = h;
-      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL("image/jpeg", 0.5);
-      setImgSrc(compressed);
-      setImgB64(compressed.split(",")[1]);
-      setImgType("image/jpeg");
-      setPhase("age");
+  // ✅ Compress to Blob — no base64, no 413 errors on mobile
+  const loadFile = (file) => {
+    if (!file?.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = (h * MAX) / w; w = MAX; }
+          else        { w = (w * MAX) / h; h = MAX; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          const compressedFile = new File([blob], "face.jpg", { type:"image/jpeg" });
+          setFileObj(compressedFile);
+          setImgSrc(URL.createObjectURL(blob));
+          setPhase("age");
+        }, "image/jpeg", 0.5);
+      };
+      img.src = e.target.result;
     };
-    img.src = e.target.result;
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
+
+  // ✅ Send as FormData — bypasses Vercel 4.5MB JSON body limit
   const handleAnalyze = async () => {
     const n = parseInt(age);
     if (!age || isNaN(n) || n < 10 || n > 100) {
       setAgeError("Please enter a valid age between 10 and 100.");
       return;
     }
-    setAgeError(""); setApiError("");
+    setAgeError("");
     setPhase("analyzing"); setProgress(0); setStepIdx(0);
 
     STEPS.forEach((_, i) => {
@@ -499,25 +465,29 @@ export default function FutureFaceSkinAnalysis() {
     });
 
     try {
+      const formData = new FormData();
+      formData.append("image", fileObj);
+      formData.append("age", n);
+
       const res = await fetch("/api/analyze-skin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: imgB64, mimeType: imgType, age: n }),
+        body: formData,
       });
-      if (!res.ok) throw new Error("API error");
+
+      if (!res.ok) throw new Error(`Status ${res.status}`);
       const { result } = await res.json();
       setAnalysis(result);
       setProgress(100);
       setTimeout(() => setPhase("results"), 700);
-    } catch {
-      setApiError("Analysis failed. Please check your image and try again.");
+    } catch (err) {
+      setAgeError(`Analysis failed: ${err.message}`);
       setPhase("age");
     }
   };
 
   const reset = () => {
-    setPhase("upload"); setImgSrc(null); setImgB64(null);
-    setAge(""); setAnalysis(null); setApiError(""); setAgeError("");
+    setPhase("upload"); setImgSrc(null); setFileObj(null);
+    setAge(""); setAnalysis(null); setAgeError("");
   };
 
   const phases = ["upload","age","analyzing","results"];
@@ -525,8 +495,6 @@ export default function FutureFaceSkinAnalysis() {
   return (
     <div style={{ minHeight:"100vh", background:C.cream, fontFamily:"Montserrat, sans-serif",
       display:"flex", flexDirection:"column" }}>
-
-      {/* Header */}
       <div style={{ padding:"18px clamp(20px,4vw,48px)", display:"flex", alignItems:"center",
         justifyContent:"space-between", borderBottom:`1px solid ${C.border}`,
         background:C.warm, position:"sticky", top:0, zIndex:10 }}>
@@ -548,13 +516,11 @@ export default function FutureFaceSkinAnalysis() {
           </div>
         </div>
       </div>
-      {/* Main content */}
       <div style={{ flex:1, padding:"clamp(32px,5vw,64px) clamp(16px,4vw,48px)",
         maxWidth:960, width:"100%", margin:"0 auto" }}>
         {phase === "upload"    && <UploadScreen onFile={loadFile} fileRef={fileRef}/>}
         {phase === "age"       && <AgeScreen imgSrc={imgSrc} age={age} setAge={setAge}
-                                    error={ageError} apiError={apiError}
-                                    onBack={reset} onAnalyze={handleAnalyze}/>}
+                                    error={ageError} onBack={reset} onAnalyze={handleAnalyze}/>}
         {phase === "analyzing" && <AnalyzingScreen imgSrc={imgSrc} progress={progress} stepIdx={stepIdx}/>}
         {phase === "results"   && <ResultsScreen analysis={analysis} imgSrc={imgSrc}
                                     userAge={parseInt(age)} onReset={reset}/>}
