@@ -109,8 +109,9 @@ function UploadScreen({ onFile, fileRef }) {
         <div style={{ color:C.muted, fontSize:13 }}>Drag &amp; drop or click to browse</div>
         <div style={{ color:C.muted, fontSize:11, marginTop:6 }}>JPG · PNG · WEBP · HEIC</div>
       </div>
-      <input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display:"none" }}
-        onChange={e => onFile(e.target.files[0])} />
+      
+<input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display:"none" }}
+  onChange={e => onFile(e.target.files[0])} />
 
       <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"10px 24px", marginBottom:36 }}>
         {["Acne Cause Detection","Wrinkle Risk","Pigmentation Score",
@@ -159,8 +160,8 @@ function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) 
           outline:"none", textAlign:"center", marginBottom:10,
           boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}
       />
-      {error    && <div style={{ color:C.red, fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{error}</div>}
-      {apiError && <div style={{ color:C.red, fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{apiError}</div>}
+      {error    && <div style={{ color:C.red,  fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{error}</div>}
+      {apiError && <div style={{ color:C.red,  fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{apiError}</div>}
       <button onClick={onAnalyze} className="ff-btn"
         style={{ width:"100%", padding:"17px", borderRadius:14, border:"none",
           background:`linear-gradient(135deg, ${C.burgundy}, ${C.dark})`, color:"#fff",
@@ -201,6 +202,7 @@ function AnalyzingScreen({ imgSrc, progress, stepIdx }) {
             animation:"pulse 1.5s ease infinite" }}>● ANALYZING</div>
         </div>
       </div>
+
       <h2 style={{ fontFamily:"Playfair Display", fontSize:26, color:C.text, marginBottom:6 }}>
         Analyzing Your Skin
       </h2>
@@ -264,6 +266,8 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
       {/* Hero row */}
       <div style={{ display:"grid", gridTemplateColumns:"auto 1fr auto", gap:28,
         alignItems:"start", marginBottom:32 }}>
+
+        {/* Photo */}
         <div style={{ position:"relative", width:150, height:190, borderRadius:18,
           overflow:"hidden", boxShadow:"0 10px 36px rgba(119,33,53,.18)", flexShrink:0 }}>
           <img src={imgSrc} alt="your skin" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
@@ -277,6 +281,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
           </div>
         </div>
 
+        {/* Summary + age comparison */}
         <div>
           <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
             letterSpacing:".16em", textTransform:"uppercase", marginBottom:6 }}>Your Skin Report</div>
@@ -286,7 +291,9 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
             <span style={{ color:C.burgundy }}>{analysis.overallScore}</span>
             <span style={{ fontSize:16, color:C.muted }}>/100</span>
           </h2>
-          <div style={{ background:C.warm, borderRadius:14, padding:"18px 20px", border:`1px solid ${C.border}` }}>
+
+          <div style={{ background:C.warm, borderRadius:14, padding:"18px 20px",
+            border:`1px solid ${C.border}` }}>
             <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.muted,
               letterSpacing:".1em", textTransform:"uppercase", marginBottom:14 }}>
               Skin Age vs Real Age
@@ -315,6 +322,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
           </div>
         </div>
 
+        {/* Overall score ring */}
         <div className="ff-hover" style={{ background:C.warm, borderRadius:18, padding:"22px 18px",
           border:`1px solid ${C.border}`, boxShadow:"0 2px 12px rgba(0,0,0,.04)",
           textAlign:"center", flexShrink:0 }}>
@@ -416,7 +424,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
       <div style={{ background:"rgba(119,33,53,.04)", borderRadius:14, padding:"14px 18px",
         marginBottom:28, border:"1px solid rgba(119,33,53,.12)" }}>
         <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6, textAlign:"center" }}>
-          ⚕️ <strong>Disclaimer:</strong> This analysis is for informational purposes only and is
+          <strong>Disclaimer:</strong> This analysis is for informational purposes only and is
           not a medical diagnosis. For clinical skin concerns, please consult a licensed dermatologist.
         </p>
       </div>
@@ -443,7 +451,7 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function FutureFaceSkinAnalysis() {
-  const [phase,    setPhase]    = useState("upload");
+  const [phase,    setPhase]    = useState("upload"); // upload | age | analyzing | results
   const [imgSrc,   setImgSrc]   = useState(null);
   const [imgB64,   setImgB64]   = useState(null);
   const [imgType,  setImgType]  = useState("image/jpeg");
@@ -455,7 +463,6 @@ export default function FutureFaceSkinAnalysis() {
   const [stepIdx,  setStepIdx]  = useState(0);
   const fileRef = useRef(null);
 
-  // ── Compress image before sending (fixes mobile 413 error) ──────────────────
  const loadFile = (file) => {
   if (!file?.type.startsWith("image/")) return;
   const reader = new FileReader();
@@ -463,16 +470,16 @@ export default function FutureFaceSkinAnalysis() {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      const MAX = 400;
+      const MAX = 1200;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
         else        { w = Math.round((w * MAX) / h); h = MAX; }
       }
-      canvas.width  = w;
+      canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL("image/jpeg", 0.5);
+      const compressed = canvas.toDataURL("image/jpeg", 0.85);
       setImgSrc(compressed);
       setImgB64(compressed.split(",")[1]);
       setImgType("image/jpeg");
@@ -548,6 +555,7 @@ export default function FutureFaceSkinAnalysis() {
           </div>
         </div>
       </div>
+
       {/* Main content */}
       <div style={{ flex:1, padding:"clamp(32px,5vw,64px) clamp(16px,4vw,48px)",
         maxWidth:960, width:"100%", margin:"0 auto" }}>
