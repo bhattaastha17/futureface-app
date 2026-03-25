@@ -430,8 +430,8 @@ export default function FutureFaceSkinAnalysis() {
     img.onload = () => {
       const canvas = document.createElement("canvas");
 
-      // 🔥 MUCH smaller size
-      const MAX = 256;
+      // 🔥 CRITICAL: reduce hard
+      const MAX = 192;
 
       let w = img.width;
       let h = img.height;
@@ -452,14 +452,16 @@ export default function FutureFaceSkinAnalysis() {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, w, h);
 
-      // 🔥 MORE compression
-      const compressed = canvas.toDataURL("image/jpeg", 0.3);
+      // 🔥 VERY HIGH COMPRESSION
+      const compressed = canvas.toDataURL("image/jpeg", 0.25);
 
       const base64 = compressed.split(",")[1];
 
-      // 🚨 HARD CHECK
-      if (base64.length > 2_500_000) {
-        alert("Image too large. Please upload a smaller image.");
+      console.log("Base64 size:", base64.length);
+
+      // 🚨 HARD LIMIT CHECK (IMPORTANT)
+      if (base64.length > 2_000_000) {
+        alert("Image too large. Try another photo.");
         return;
       }
 
@@ -477,10 +479,10 @@ export default function FutureFaceSkinAnalysis() {
   // ✅ Send as FormData — bypasses Vercel 4.5MB JSON body limit
   const handleAnalyze = async () => {
     const n = parseInt(age);
-    if (!age || isNaN(n) || n < 10 || n > 100) {
-      setAgeError("Please enter a valid age between 10 and 100.");
-      return;
-    }
+    if (!imgB64 || imgB64.length > 2_000_000) {
+  setApiError("Image too large. Please upload a smaller image.");
+  return;
+}
     setAgeError("");
     setPhase("analyzing"); setProgress(0); setStepIdx(0);
 
