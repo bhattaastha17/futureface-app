@@ -420,33 +420,60 @@ export default function FutureFaceSkinAnalysis() {
 
   // ✅ Compress to Blob — no base64, no 413 errors on mobile
   const loadFile = (file) => {
-    if (!file?.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX = 400;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = (h * MAX) / w; w = MAX; }
-          else        { w = (w * MAX) / h; h = MAX; }
+  if (!file?.type.startsWith("image/")) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+
+      // 🔥 MUCH smaller size
+      const MAX = 256;
+
+      let w = img.width;
+      let h = img.height;
+
+      if (w > MAX || h > MAX) {
+        if (w > h) {
+          h = Math.round((h * MAX) / w);
+          w = MAX;
+        } else {
+          w = Math.round((w * MAX) / h);
+          h = MAX;
         }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        canvas.toBlob((blob) => {
-          const compressedFile = new File([blob], "face.jpg", { type:"image/jpeg" });
-          setFileObj(compressedFile);
-          setImgSrc(URL.createObjectURL(blob));
-          setPhase("age");
-        }, "image/jpeg", 0.5);
-      };
-      img.src = e.target.result;
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // 🔥 MORE compression
+      const compressed = canvas.toDataURL("image/jpeg", 0.3);
+
+      const base64 = compressed.split(",")[1];
+
+      // 🚨 HARD CHECK
+      if (base64.length > 2_500_000) {
+        alert("Image too large. Please upload a smaller image.");
+        return;
+      }
+
+      setImgSrc(compressed);
+      setImgB64(base64);
+      setImgType("image/jpeg");
+      setPhase("age");
     };
-    reader.readAsDataURL(file);
+
+    img.src = e.target.result;
   };
 
+  reader.readAsDataURL(file);
+};
   // ✅ Send as FormData — bypasses Vercel 4.5MB JSON body limit
   const handleAnalyze = async () => {
     const n = parseInt(age);
