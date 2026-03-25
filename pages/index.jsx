@@ -549,7 +549,6 @@ export default function FutureFaceSkinAnalysis() {
           </div>
         </div>
       </div>
-
       {/* Main content */}
       <div style={{ flex:1, padding:"clamp(32px,5vw,64px) clamp(16px,4vw,48px)",
         maxWidth:960, width:"100%", margin:"0 auto" }}>
