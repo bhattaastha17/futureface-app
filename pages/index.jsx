@@ -456,33 +456,32 @@ export default function FutureFaceSkinAnalysis() {
   const fileRef = useRef(null);
 
   // ── Compress image before sending (fixes mobile 413 error) ──────────────────
-  const loadFile = (file) => {
-    if (!file?.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
-          else        { w = Math.round((w * MAX) / h); h = MAX; }
-        }
-        canvas.width  = w;
-        canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL("image/jpeg", 0.7);
-        setImgSrc(compressed);
-        setImgB64(compressed.split(",")[1]);
-        setImgType("image/jpeg");
-        setPhase("age");
-      };
-      img.src = e.target.result;
+ const loadFile = (file) => {
+  if (!file?.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
+        else        { w = Math.round((w * MAX) / h); h = MAX; }
+      }
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL("image/jpeg", 0.5);
+      setImgSrc(compressed);
+      setImgB64(compressed.split(",")[1]);
+      setImgType("image/jpeg");
+      setPhase("age");
     };
-    reader.readAsDataURL(file);
+    img.src = e.target.result;
   };
-
+  reader.readAsDataURL(file);
+};
   const handleAnalyze = async () => {
     const n = parseInt(age);
     if (!age || isNaN(n) || n < 10 || n > 100) {
