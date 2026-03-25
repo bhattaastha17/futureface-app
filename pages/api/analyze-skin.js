@@ -93,3 +93,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Internal error", detail: err.message });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
