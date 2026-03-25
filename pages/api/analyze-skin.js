@@ -1,8 +1,6 @@
 // pages/api/analyze-skin.js
-// Handles FormData (multipart) instead of JSON — avoids Vercel 4.5MB body limit
-
-import { IncomingForm } from "formidable";
-import fs from "fs";
+// Proxies the Claude Vision API call server-side so ANTHROPIC_API_KEY
+// is never exposed to the browser.
 
 const PROMPT = (age) => `You are an expert AI dermatologist for Future Face (futureface.ca), a premium science-based skincare brand.
 
@@ -42,45 +40,22 @@ Analyze this selfie for a ${age}-year-old. Return ONLY raw valid JSON — no mar
   "recommendations": ["<specific actionable tip>","<specific actionable tip>","<specific actionable tip>"]
 }`;
 
-export const config = {
-  api: {
-    bodyParser: false, // ✅ required for FormData
-  },
-};
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const { imageBase64, mimeType, age } = req.body;
+
+  if (!imageBase64 || !age) {
+    return res.status(400).json({ error: "imageBase64 and age are required." });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "ANTHROPIC_API_KEY is not set." });
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY is not set on the server." });
   }
 
-  // ── Parse FormData ──────────────────────────────────────────────────────────
-  const form = new IncomingForm({ maxFileSize: 10 * 1024 * 1024 });
-
-  const { fields, files } = await new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      else resolve({ fields, files });
-    });
-  });
-
-  const age       = Array.isArray(fields.age)   ? fields.age[0]   : fields.age;
-  const imageFile = Array.isArray(files.image)  ? files.image[0]  : files.image;
-
-  if (!imageFile || !age) {
-    return res.status(400).json({ error: "image and age are required." });
-  }
-
-  // ── Read file → base64 ──────────────────────────────────────────────────────
-  const imageBuffer  = fs.readFileSync(imageFile.filepath);
-  const imageBase64  = imageBuffer.toString("base64");
-  const mimeType     = imageFile.mimetype || "image/jpeg";
-
-  // ── Call Claude ─────────────────────────────────────────────────────────────
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -95,7 +70,7 @@ export default async function handler(req, res) {
         messages: [{
           role: "user",
           content: [
-            { type: "image", source: { type: "base64", media_type: mimeType, data: imageBase64 } },
+            { type: "image", source: { type: "base64", media_type: mimeType || "image/jpeg", data: imageBase64 } },
             { type: "text",  text: PROMPT(age) },
           ],
         }],
@@ -118,3 +93,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Internal error", detail: err.message });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
