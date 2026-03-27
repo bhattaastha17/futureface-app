@@ -2,7 +2,20 @@
 // Future Face — AI Skin Analysis
 // Screens: Upload → Age → Analyzing → Results
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+
+// ── Responsive hook ───────────────────────────────────────────────────────────
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const C = {
@@ -109,9 +122,9 @@ function UploadScreen({ onFile, fileRef }) {
         <div style={{ color:C.muted, fontSize:13 }}>Drag &amp; drop or click to browse</div>
         <div style={{ color:C.muted, fontSize:11, marginTop:6 }}>JPG · PNG · WEBP · HEIC</div>
       </div>
-      
-<input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display:"none" }}
-  onChange={e => onFile(e.target.files[0])} />
+
+      <input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display:"none" }}
+        onChange={e => onFile(e.target.files[0])} />
 
       <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"10px 24px", marginBottom:36 }}>
         {["Acne Cause Detection","Wrinkle Risk","Pigmentation Score",
@@ -158,7 +171,7 @@ function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) 
           border:`1.5px solid ${error ? C.red : C.border}`,
           background:C.warm, color:C.text, fontFamily:"Playfair Display",
           outline:"none", textAlign:"center", marginBottom:10,
-          boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}
+          boxShadow:"0 2px 8px rgba(0,0,0,.04)", boxSizing:"border-box" }}
       />
       {error    && <div style={{ color:C.red,  fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{error}</div>}
       {apiError && <div style={{ color:C.red,  fontSize:12, fontFamily:"Montserrat", marginBottom:10 }}>{apiError}</div>}
@@ -166,7 +179,8 @@ function AgeScreen({ imgSrc, age, setAge, error, apiError, onBack, onAnalyze }) 
         style={{ width:"100%", padding:"17px", borderRadius:14, border:"none",
           background:`linear-gradient(135deg, ${C.burgundy}, ${C.dark})`, color:"#fff",
           fontSize:13, fontWeight:700, fontFamily:"Montserrat", letterSpacing:".1em",
-          textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)", marginBottom:14 }}>
+          textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)", marginBottom:14,
+          cursor:"pointer" }}>
         Analyze My Skin →
       </button>
       <button onClick={onBack}
@@ -239,10 +253,84 @@ function AnalyzingScreen({ imgSrc, progress, stepIdx }) {
   );
 }
 
+// ── Age Comparison Card ───────────────────────────────────────────────────────
+function AgeComparison({ skinAge, userAge }) {
+  const diff    = skinAge - userAge;
+  const absDiff = Math.abs(diff);
+  const diffCol = diff > 3 ? C.red : diff < -3 ? C.green : C.amber;
+
+  const verdict =
+    diff === 0 ? "Your skin matches your real age perfectly."
+    : diff > 0  ? `Your skin is ${absDiff} year${absDiff !== 1 ? "s" : ""} older than your real age.`
+    :              `Your skin is ${absDiff} year${absDiff !== 1 ? "s" : ""} younger than your real age.`;
+
+  const icon = diff === 0 ? "=" : diff > 0 ? "↑" : "↓";
+
+  return (
+    <div style={{ width:"100%", background:C.warm, borderRadius:16,
+      border:`1px solid ${C.border}`, overflow:"hidden" }}>
+
+      {/* Label bar */}
+      <div style={{ background: diffCol + "14", padding:"8px 18px",
+        borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.muted,
+          letterSpacing:".1em", textTransform:"uppercase" }}>Skin Age vs Real Age</div>
+      </div>
+
+      {/* Main row: Real Age  ←  diff badge  →  Skin Age */}
+      <div style={{ display:"flex", alignItems:"center", padding:"20px 18px", gap:10 }}>
+
+        {/* Real Age */}
+        <div style={{ flex:1, textAlign:"center" }}>
+          <div style={{ fontFamily:"Playfair Display", fontSize:48, fontWeight:700,
+            color:C.text, lineHeight:1 }}>{userAge}</div>
+          <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.muted,
+            letterSpacing:".08em", textTransform:"uppercase", marginTop:5 }}>Real Age</div>
+        </div>
+
+        {/* Diff badge */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, flexShrink:0 }}>
+          <div style={{ width:56, height:56, borderRadius:"50%",
+            background: diffCol + "18",
+            border:`2.5px solid ${diffCol}`,
+            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+            <div style={{ fontFamily:"Montserrat", fontSize:8, fontWeight:800, color:diffCol,
+              letterSpacing:".05em" }}>{icon}</div>
+            <div style={{ fontFamily:"Playfair Display", fontSize:20, fontWeight:700,
+              color:diffCol, lineHeight:1 }}>{absDiff}</div>
+            <div style={{ fontFamily:"Montserrat", fontSize:7, color:diffCol,
+              fontWeight:700 }}>YRS</div>
+          </div>
+          <div style={{ fontFamily:"Montserrat", fontSize:9, fontWeight:700, color:diffCol,
+            textTransform:"uppercase", letterSpacing:".06em" }}>
+            {diff === 0 ? "Match" : diff > 0 ? "Older" : "Younger"}
+          </div>
+        </div>
+
+        {/* Skin Age */}
+        <div style={{ flex:1, textAlign:"center" }}>
+          <div style={{ fontFamily:"Playfair Display", fontSize:48, fontWeight:700,
+            color:diffCol, lineHeight:1 }}>{skinAge}</div>
+          <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.muted,
+            letterSpacing:".08em", textTransform:"uppercase", marginTop:5 }}>Skin Age</div>
+        </div>
+      </div>
+
+      {/* Verdict strip */}
+      <div style={{ background: diffCol + "10", borderTop:`1px solid ${diffCol}22`,
+        padding:"10px 18px", textAlign:"center" }}>
+        <div style={{ fontFamily:"Montserrat", fontSize:12, fontWeight:600, color:diffCol,
+          lineHeight:1.5 }}>{verdict}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Results Screen ────────────────────────────────────────────────────────────
 function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
+  const isMobile = useWindowWidth() < 640;
+
   const diff    = analysis.skinAge - userAge;
-  const diffTxt = diff > 0 ? `+${diff} yrs older` : diff < 0 ? `${Math.abs(diff)} yrs younger` : "Matches your age";
   const diffCol = diff > 3 ? C.red : diff < -3 ? C.green : C.amber;
 
   const metrics = [
@@ -263,87 +351,98 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
   return (
     <div style={{ animation:"fadeUp .6s ease both" }}>
 
-      {/* Hero row */}
-      <div style={{ display:"grid", gridTemplateColumns:"auto 1fr auto", gap:28,
-        alignItems:"start", marginBottom:32 }}>
+      {/* ── Hero section — stacks on mobile ── */}
+      {isMobile ? (
+        /* MOBILE HERO: photo + title centered, score ring below */
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:20, marginBottom:28 }}>
 
-        {/* Photo */}
-        <div style={{ position:"relative", width:150, height:190, borderRadius:18,
-          overflow:"hidden", boxShadow:"0 10px 36px rgba(119,33,53,.18)", flexShrink:0 }}>
-          <img src={imgSrc} alt="your skin" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-          <div style={{ position:"absolute", bottom:0, left:0, right:0,
-            background:"linear-gradient(transparent,rgba(44,24,16,.75))", padding:"24px 12px 12px" }}>
-            <div style={{ color:"rgba(255,255,255,.7)", fontFamily:"Montserrat", fontSize:9,
-              fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Skin Type</div>
-            <div style={{ color:"#fff", fontFamily:"Playfair Display", fontSize:15 }}>
-              {analysis.skinType}
-            </div>
-          </div>
-        </div>
-
-        {/* Summary + age comparison */}
-        <div>
-          <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
-            letterSpacing:".16em", textTransform:"uppercase", marginBottom:6 }}>Your Skin Report</div>
-          <h2 style={{ fontFamily:"Playfair Display", fontSize:"clamp(22px,3vw,32px)",
-            color:C.text, lineHeight:1.2, marginBottom:18 }}>
-            Your skin score is{" "}
-            <span style={{ color:C.burgundy }}>{analysis.overallScore}</span>
-            <span style={{ fontSize:16, color:C.muted }}>/100</span>
-          </h2>
-
-          <div style={{ background:C.warm, borderRadius:14, padding:"18px 20px",
-            border:`1px solid ${C.border}` }}>
-            <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.muted,
-              letterSpacing:".1em", textTransform:"uppercase", marginBottom:14 }}>
-              Skin Age vs Real Age
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:18 }}>
-              <div style={{ textAlign:"center", minWidth:52 }}>
-                <div style={{ fontFamily:"Playfair Display", fontSize:40, fontWeight:700,
-                  color:diffCol, lineHeight:1 }}>{analysis.skinAge}</div>
-                <div style={{ fontFamily:"Montserrat", fontSize:10, color:C.muted, marginTop:4 }}>Skin Age</div>
-              </div>
-              <div style={{ flex:1 }}>
-                <div style={{ height:4, background:C.border, borderRadius:4, position:"relative", margin:"0 0 8px" }}>
-                  <div style={{ position:"absolute", left:"50%", top:-2, height:8, borderRadius:4,
-                    background:diffCol, width:`${Math.min(Math.abs(diff)*4, 50)}%`,
-                    transform: diff < 0 ? "translateX(-100%)" : "none", transition:"width 1s ease" }}/>
-                </div>
-                <div style={{ fontFamily:"Montserrat", fontSize:11, fontWeight:700,
-                  color:diffCol, textAlign:"center" }}>{diffTxt}</div>
-              </div>
-              <div style={{ textAlign:"center", minWidth:52 }}>
-                <div style={{ fontFamily:"Playfair Display", fontSize:40, fontWeight:700,
-                  color:C.text, lineHeight:1 }}>{userAge}</div>
-                <div style={{ fontFamily:"Montserrat", fontSize:10, color:C.muted, marginTop:4 }}>Real Age</div>
+          {/* Photo */}
+          <div style={{ position:"relative", width:130, height:160, borderRadius:18,
+            overflow:"hidden", boxShadow:"0 10px 36px rgba(119,33,53,.18)", flexShrink:0 }}>
+            <img src={imgSrc} alt="your skin" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+            <div style={{ position:"absolute", bottom:0, left:0, right:0,
+              background:"linear-gradient(transparent,rgba(44,24,16,.75))", padding:"20px 10px 10px" }}>
+              <div style={{ color:"rgba(255,255,255,.7)", fontFamily:"Montserrat", fontSize:8,
+                fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Skin Type</div>
+              <div style={{ color:"#fff", fontFamily:"Playfair Display", fontSize:13 }}>
+                {analysis.skinType}
               </div>
             </div>
           </div>
+
+          {/* Label + title */}
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
+              letterSpacing:".16em", textTransform:"uppercase", marginBottom:6 }}>Your Skin Report</div>
+            <h2 style={{ fontFamily:"Playfair Display", fontSize:26, color:C.text, lineHeight:1.2, marginBottom:0 }}>
+              Your skin score is{" "}
+              <span style={{ color:C.burgundy }}>{analysis.overallScore}</span>
+              <span style={{ fontSize:15, color:C.muted }}>/100</span>
+            </h2>
+          </div>
+
+          {/* Age comparison */}
+          <AgeComparison skinAge={analysis.skinAge} userAge={userAge}/>
         </div>
 
-        {/* Overall score ring */}
-        <div className="ff-hover" style={{ background:C.warm, borderRadius:18, padding:"22px 18px",
-          border:`1px solid ${C.border}`, boxShadow:"0 2px 12px rgba(0,0,0,.04)",
-          textAlign:"center", flexShrink:0 }}>
-          <CircularScore score={analysis.overallScore} size={140} color={C.burgundy}
-            label="Overall Health" sub="Composite Score"/>
-        </div>
-      </div>
+      ) : (
+        /* DESKTOP HERO: 2-column grid */
+        <div style={{ display:"grid", gridTemplateColumns:"auto 1fr", gap:28,
+          alignItems:"start", marginBottom:32 }}>
 
-      {/* 4 Metric cards */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",
-        gap:16, marginBottom:28 }}>
+          {/* Photo */}
+          <div style={{ position:"relative", width:150, height:190, borderRadius:18,
+            overflow:"hidden", boxShadow:"0 10px 36px rgba(119,33,53,.18)", flexShrink:0 }}>
+            <img src={imgSrc} alt="your skin" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+            <div style={{ position:"absolute", bottom:0, left:0, right:0,
+              background:"linear-gradient(transparent,rgba(44,24,16,.75))", padding:"24px 12px 12px" }}>
+              <div style={{ color:"rgba(255,255,255,.7)", fontFamily:"Montserrat", fontSize:9,
+                fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>Skin Type</div>
+              <div style={{ color:"#fff", fontFamily:"Playfair Display", fontSize:15 }}>
+                {analysis.skinType}
+              </div>
+            </div>
+          </div>
+
+          {/* Summary + age comparison */}
+          <div>
+            <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
+              letterSpacing:".16em", textTransform:"uppercase", marginBottom:6 }}>Your Skin Report</div>
+            <h2 style={{ fontFamily:"Playfair Display", fontSize:"clamp(22px,3vw,32px)",
+              color:C.text, lineHeight:1.2, marginBottom:18 }}>
+              Your skin score is{" "}
+              <span style={{ color:C.burgundy }}>{analysis.overallScore}</span>
+              <span style={{ fontSize:16, color:C.muted }}>/100</span>
+            </h2>
+
+            <AgeComparison skinAge={analysis.skinAge} userAge={userAge}/>
+          </div>
+        </div>
+      )}
+
+      {/* ── 4 Metric cards — 1 col on mobile, 2 col on tablet, 4 on desktop ── */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns: isMobile
+          ? "1fr"
+          : "repeat(auto-fit, minmax(200px, 1fr))",
+        gap:16,
+        marginBottom:28,
+      }}>
         {metrics.map(({ key, label, icon, data, badge }) => (
           <div key={key} className="ff-hover" style={{ background:C.warm, borderRadius:18, padding:20,
             border:`1px solid ${C.border}`, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
+
+            {/* Mobile: horizontal layout for icon + badge */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
               <span style={{ fontSize:20 }}>{icon}</span>
               <Badge level={badge}/>
             </div>
+
             <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
-              <CircularScore score={data?.score ?? 0} size={100}/>
+              <CircularScore score={data?.score ?? 0} size={isMobile ? 90 : 100}/>
             </div>
+
             <div style={{ fontFamily:"Montserrat", fontSize:12, fontWeight:700,
               color:C.text, marginBottom:6 }}>{label}</div>
             <p style={{ fontFamily:"Montserrat", fontSize:11, color:C.muted, lineHeight:1.6 }}>
@@ -362,15 +461,21 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
         ))}
       </div>
 
-      {/* 5-Year simulation */}
-      <div style={{ background:C.warm, borderRadius:20, padding:28, border:`1px solid ${C.border}`,
-        marginBottom:28, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
+      {/* ── 5-Year simulation — single column on mobile ── */}
+      <div style={{ background:C.warm, borderRadius:20, padding: isMobile ? "20px 16px" : 28,
+        border:`1px solid ${C.border}`, marginBottom:28, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
         <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, color:C.burgundy,
           letterSpacing:".16em", textTransform:"uppercase", marginBottom:4 }}>AI Prediction</div>
-        <h3 style={{ fontFamily:"Playfair Display", fontSize:24, color:C.text, marginBottom:24 }}>
+        <h3 style={{ fontFamily:"Playfair Display", fontSize: isMobile ? 20 : 24, color:C.text, marginBottom:24 }}>
           5-Year Skin Simulation
         </h3>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:12 }}>
+        <div style={{
+          display:"grid",
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : "repeat(auto-fit, minmax(140px, 1fr))",
+          gap:12,
+        }}>
           {simNodes.map((node, i) => (
             <div key={i} style={{ borderRadius:16, padding:18, position:"relative",
               background: node.highlight
@@ -400,10 +505,10 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
 
       {/* Recommendations */}
       <div style={{ background:`linear-gradient(140deg, ${C.burgundy} 0%, ${C.dark} 100%)`,
-        borderRadius:20, padding:28, marginBottom:28, color:"#fff" }}>
+        borderRadius:20, padding: isMobile ? "20px 18px" : 28, marginBottom:28, color:"#fff" }}>
         <div style={{ fontFamily:"Montserrat", fontSize:10, fontWeight:700, letterSpacing:".16em",
           textTransform:"uppercase", opacity:.65, marginBottom:6 }}>Personalized for You</div>
-        <h3 style={{ fontFamily:"Playfair Display", fontSize:24, marginBottom:24 }}>
+        <h3 style={{ fontFamily:"Playfair Display", fontSize: isMobile ? 20 : 24, marginBottom:24 }}>
           Your Skincare Recommendations
         </h3>
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
@@ -430,18 +535,21 @@ function ResultsScreen({ analysis, imgSrc, userAge, onReset }) {
       </div>
 
       {/* CTAs */}
-      <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+      <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap",
+        flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center" }}>
         <a href="https://futureface.ca/shop/" target="_blank" rel="noopener noreferrer"
           className="ff-btn"
           style={{ background:`linear-gradient(135deg, ${C.burgundy}, ${C.dark})`, color:"#fff",
             padding:"15px 32px", borderRadius:14, fontFamily:"Montserrat", fontSize:13,
             fontWeight:700, textDecoration:"none", letterSpacing:".08em",
-            textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)" }}>
+            textTransform:"uppercase", boxShadow:"0 6px 20px rgba(119,33,53,.35)",
+            textAlign:"center" }}>
           Shop Future Face Products →
         </a>
         <button onClick={onReset} className="ff-btn"
           style={{ background:"none", border:`1.5px solid ${C.border}`, color:C.muted,
-            padding:"15px 28px", borderRadius:14, fontFamily:"Montserrat", fontSize:13, cursor:"pointer" }}>
+            padding:"15px 28px", borderRadius:14, fontFamily:"Montserrat", fontSize:13,
+            cursor:"pointer", textAlign:"center" }}>
           Analyze Another Photo
         </button>
       </div>
@@ -463,32 +571,33 @@ export default function FutureFaceSkinAnalysis() {
   const [stepIdx,  setStepIdx]  = useState(0);
   const fileRef = useRef(null);
 
- const loadFile = (file) => {
-  if (!file?.type.startsWith("image/")) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const MAX = 1200;
-      let w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
-        else        { w = Math.round((w * MAX) / h); h = MAX; }
-      }
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL("image/jpeg", 0.85);
-      setImgSrc(compressed);
-      setImgB64(compressed.split(",")[1]);
-      setImgType("image/jpeg");
-      setPhase("age");
+  const loadFile = (file) => {
+    if (!file?.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
+          else        { w = Math.round((w * MAX) / h); h = MAX; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL("image/jpeg", 0.85);
+        setImgSrc(compressed);
+        setImgB64(compressed.split(",")[1]);
+        setImgType("image/jpeg");
+        setPhase("age");
+      };
+      img.src = e.target.result;
     };
-    img.src = e.target.result;
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
+
   const handleAnalyze = async () => {
     const n = parseInt(age);
     if (!age || isNaN(n) || n < 10 || n > 100) {
@@ -534,7 +643,7 @@ export default function FutureFaceSkinAnalysis() {
       display:"flex", flexDirection:"column" }}>
 
       {/* Header */}
-      <div style={{ padding:"18px clamp(20px,4vw,48px)", display:"flex", alignItems:"center",
+      <div style={{ padding:"18px clamp(16px,4vw,48px)", display:"flex", alignItems:"center",
         justifyContent:"space-between", borderBottom:`1px solid ${C.border}`,
         background:C.warm, position:"sticky", top:0, zIndex:10 }}>
         <div style={{ fontFamily:"Playfair Display", fontSize:22, fontWeight:700,
@@ -549,16 +658,17 @@ export default function FutureFaceSkinAnalysis() {
               ))}
             </div>
           )}
-          <div style={{ background:C.burgundy, color:"#fff", padding:"4px 14px", borderRadius:20,
-            fontSize:10, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>
+          <div style={{ background:C.burgundy, color:"#fff", padding:"4px 12px", borderRadius:20,
+            fontSize:10, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase",
+            whiteSpace:"nowrap" }}>
             AI Skin Analysis
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div style={{ flex:1, padding:"clamp(32px,5vw,64px) clamp(16px,4vw,48px)",
-        maxWidth:960, width:"100%", margin:"0 auto" }}>
+      <div style={{ flex:1, padding:"clamp(24px,5vw,64px) clamp(14px,4vw,48px)",
+        maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
         {phase === "upload"    && <UploadScreen onFile={loadFile} fileRef={fileRef}/>}
         {phase === "age"       && <AgeScreen imgSrc={imgSrc} age={age} setAge={setAge}
                                     error={ageError} apiError={apiError}
